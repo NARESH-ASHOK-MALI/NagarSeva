@@ -1,0 +1,189 @@
+<%layout('layouts/boilerplate') -%>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-background"></div>
+  <div class="hero-content">
+    <div class="hero-logo">
+      <img src="/Assets/logo.png" alt="NagarSeva Logo" />
+    </div>
+    <h1 class="hero-title">
+      <span class="typing-text" id="typing-text">NagarSeva: Highlighting Issues, Inspiring Action.</span>
+    </h1>
+    <p class="hero-subtitle">Connecting communities through civic engagement and transparent governance</p>
+    <div class="hero-actions">
+      <a href="/listings" class="hero-btn primary">
+        <i class="fas fa-list"></i>
+        View All Complaints
+      </a>
+      <a href="/listings/new" class="hero-btn secondary">
+        <i class="fas fa-plus"></i>
+        Report an Issue
+      </a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <i class="fas fa-chevron-down"></i>
+  </div>
+</section>
+
+<!-- Why It Matters Section -->
+<section class="why-matters">
+  <div class="container">
+    <h2 class="section-title">Why It Matters</h2>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+          <h3>Safety First</h3>
+          <p>In 2024, potholes were a contributing factor in thousands of traffic accidents. Your reports help prevent these incidents.</p>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-bug"></i>
+        </div>
+        <div class="stat-content">
+          <h3>Health Impact</h3>
+          <p>Uncollected garbage isn't just an eyesore; it can become a breeding ground for diseases and pests.</p>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+          <h3>Community Voice</h3>
+          <p>Every complaint matters. Together, we create cleaner, safer, and more livable communities for everyone.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- City Performance Section -->
+<section class="city-performance">
+  <div class="container">
+    <h2 class="section-title">City Performance Dashboard</h2>
+    <p class="section-subtitle">See how different cities are performing in resolving community complaints</p>
+    <div class="chart-container">
+      <canvas id="cityStatsChart"></canvas>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Typing Animation
+  document.addEventListener('DOMContentLoaded', function() {
+    const phrases = [
+      "NagarSeva: Highlighting Issues, Inspiring Action.",
+      "Connecting People Globally.",
+      "Building Better Communities Together.",
+      "Your Voice, Our Platform, Real Change."
+    ];
+    
+    let currentPhrase = 0;
+    let currentChar = 0;
+    let isDeleting = false;
+    const typingElement = document.getElementById('typing-text');
+    
+    function typeText() {
+      const current = phrases[currentPhrase];
+      
+      if (isDeleting) {
+        typingElement.textContent = current.substring(0, currentChar - 1);
+        currentChar--;
+      } else {
+        typingElement.textContent = current.substring(0, currentChar + 1);
+        currentChar++;
+      }
+      
+      let typeSpeed = isDeleting ? 50 : 100;
+      
+      if (!isDeleting && currentChar === current.length) {
+        typeSpeed = 2000;
+        isDeleting = true;
+      } else if (isDeleting && currentChar === 0) {
+        isDeleting = false;
+        currentPhrase = (currentPhrase + 1) % phrases.length;
+        typeSpeed = 500;
+      }
+      
+      setTimeout(typeText, typeSpeed);
+    }
+    
+    typeText();
+    
+    // City Stats Chart
+    async function loadCityStats() {
+      try {
+        const res = await fetch('/api/city-stats');
+        const data = await res.json();
+        
+        if (!Array.isArray(data) || data.length === 0) {
+          document.getElementById('cityStatsChart').style.display = 'none';
+          return;
+        }
+        
+        const ctx = document.getElementById('cityStatsChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.map(item => item.city),
+            datasets: [{
+              label: 'Resolved Complaints',
+              data: data.map(item => item.count),
+              backgroundColor: 'rgba(76, 175, 80, 0.8)',
+              borderColor: 'rgba(76, 175, 80, 1)',
+              borderWidth: 2,
+              borderRadius: 8,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              title: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.8)'
+                }
+              },
+              x: {
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: 'rgba(255, 255, 255, 0.8)'
+                }
+              }
+            },
+            animation: {
+              duration: 2000,
+              easing: 'easeInOutQuart'
+            }
+          }
+        });
+      } catch (e) {
+        console.error('Failed to load city stats', e);
+      }
+    }
+    
+    loadCityStats();
+  });
+</script>

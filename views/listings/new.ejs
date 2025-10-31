@@ -1,0 +1,226 @@
+<% layout('layouts/boilerplate') -%>
+<body>
+  <div class="row mt-3">
+    <div class="col-8 offset-2">
+      <h3 id="cmp" >Register a complaint</h3>
+      <h6 id="cmp">Help improve your community by reporting civic issues. Your voice matters.</h6>
+      
+      <form method="POST" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
+
+        <div class="mb-3">
+          <label id="cmp" for="title" class="form-label">Title</label>
+          <input
+            name="listing[title]"
+            placeholder="e.g., Deep pothole on Main Street"
+            type="text"
+            class="form-control"
+            required
+          />
+          <div class="valid-feedback">Title looks good!</div>
+        </div>
+
+        <div class="mb-3">
+          <label id="cmp" for="description" class="form-label">Description</label>
+          <textarea
+            class="form-control"
+            name="listing[description]"
+            placeholder="Describe the issue in detail."
+            required
+          ></textarea>
+          <div class="valid-feedback">Description looks good!</div>
+        </div>
+
+            <div class="mb-3">
+                <label id="cmp" for="image-input" class="form-label">Upload Image</label>
+  
+                <input
+                name="listing[image]"
+                type="file"
+                class="form-control"
+                id="image-input"
+                required
+                />
+                <br>
+              <img id="image-preview" alt="Image Preview" class="img-fluid" style="display: none; width: 400px; border-radius: 12px;">
+            </div>
+
+        <div class="row">
+          <div class="mb-3 col-md-4">
+            <label id="cmp" for="date" class="form-label">Date</label>
+            <input
+              name="listing[date]"
+              type="date"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="mb-3 col-md-8">
+            <label id="cmp" for="city" class="form-label">City</label>
+            <input
+              name="listing[city]"
+              placeholder="e.g., Pune"
+              type="text"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="location-input" id="cmp" class="form-label">Address</label>
+            <div class="input-group">
+            <input name="listing[address]" type="text" class="form-control" id="location-input" required />
+            <button class="btn btn-outline-warning" type="button" id="get-location-btn" >Get My Location</button>
+          </div>
+        </div>
+        <input type="hidden" name="listing[location][type]" value="Point" />
+        <input type="hidden" name="listing[location][coordinates][]" id="lng-input" />
+        <input type="hidden" name="listing[location][coordinates][]" id="lat-input" />
+
+    <div class="map-wrapper mb-3">
+      <div id="map"></div>
+      <div class="map-spinner" id="map-spinner">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading map...</span>
+        </div>
+      </div>
+      <div class="alert alert-danger map-error" id="map-error" role="alert">
+        Could not load the map. Please check your network or try again later.
+      </div>
+    </div>
+
+        <button class="btn btn-dark add-btn mt-3">Register</button>
+        <br /><br />
+      </form>
+    </div>
+  </div>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const locationInput = document.getElementById('location-input');
+    const getLocationBtn = document.getElementById('get-location-btn');
+    const mapContainer = document.getElementById('map');
+    
+    const map = L.map(mapContainer).setView([18.5204, 73.8567], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    let marker = L.marker([18.5204, 73.8567]).addTo(map)
+        .bindPopup('Your selected location.').openPopup();
+
+    // ✅ This function now includes the reverse geocoding API call
+    function updateLocation(lat, lng) {
+        marker.setLatLng([lat, lng]);
+        map.setView([lat, lng], 15);
+        document.getElementById('lat-input').value = lat;
+        document.getElementById('lng-input').value = lng;
+        
+        // Show a loading message while we fetch the address
+        locationInput.value = "Fetching address...";
+
+        // The Nominatim API URL
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    locationInput.value = data.display_name;
+                } else {
+                    // Fallback to coordinates if no address is found
+                    locationInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching address:', error);
+                locationInput.value = "Could not fetch address.";
+            });
+    }
+
+    map.on('click', function(e) {
+        updateLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+  getLocationBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    updateLocation(position.coords.latitude, position.coords.longitude);
+                },
+        function(error) {
+          // Handle geolocation permission errors gracefully
+          console.warn('Geolocation error:', error);
+          const mapError = document.getElementById('map-error');
+          mapError.textContent = 'Could not get your location. Please allow location access or enter address manually.';
+          mapError.style.display = 'block';
+          setTimeout(() => mapError.style.display = 'none', 6000);
+        }
+            );
+        } else {
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
+    
+  // Spinner control and tile load handling
+  const mapSpinner = document.getElementById('map-spinner');
+  const mapError = document.getElementById('map-error');
+  function showSpinner() { mapSpinner.style.display = 'block'; }
+  function hideSpinner() { mapSpinner.style.display = 'none'; }
+
+  // Show spinner while tiles load
+  showSpinner();
+  map.on('load', function() {
+    hideSpinner();
+  });
+  // tileload and tileerror
+  map.on('tileload', function() {
+    hideSpinner();
+  });
+  map.on('tileerror', function(err) {
+    console.error('Tile load error:', err);
+    hideSpinner();
+    mapError.textContent = 'Map tiles failed to load. Check your network or try again later.';
+    mapError.style.display = 'block';
+  });
+});
+</script>
+ <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log("1. Page loaded. Script is running.");
+
+    const fileInput = document.getElementById('image-input');
+    const imagePreview = document.getElementById('image-preview');
+
+    console.log("2. Searching for elements:", { fileInput, imagePreview });
+
+    if (fileInput && imagePreview) {
+      console.log("3. Elements found! Adding the event listener.");
+
+      fileInput.addEventListener('change', () => {
+        console.log("4. File selected! The 'change' event fired.");
+
+        const file = fileInput.files[0];
+        if (file) {
+          console.log("5. A valid file was found:", file.name);
+          const reader = new FileReader();
+          
+          reader.onload = (e) => {
+            console.log("6. FileReader finished loading. Setting the preview image.");
+            imagePreview.src = e.target.result;
+            imagePreview.style.display = 'block'; 
+          };
+          
+          reader.readAsDataURL(file);
+        } else {
+          console.log("No valid file was found after the change event.");
+        }
+      });
+    } else {
+      console.log("ERROR: Could not find the file input or the image preview element. Please check that the id='image-input' and id='image-preview' exist in your HTML.");
+    }
+  });
+</script>
+</body>

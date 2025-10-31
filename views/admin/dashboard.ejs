@@ -1,0 +1,79 @@
+<% layout('layouts/boilerplate') -%>
+<div class="admin-dashboard">
+  <div class="admin-header">
+    <h1 class="admin-title">Admin Dashboard</h1>
+    <p class="admin-subtitle">Manage and verify community complaints</p>
+  </div>
+  
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <i class="fas fa-clock"></i>
+      <div class="stat-content">
+        <h3><%= pending.length %></h3>
+        <p>Pending Verification</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-building"></i>
+      <div class="stat-content">
+        <h3><%= authorities.length %></h3>
+        <p>Authorities</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="complaints-section">
+    <h2 class="section-title">Complaints Awaiting Review</h2>
+    <% if (pending.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-check-circle"></i>
+        <h3>All caught up!</h3>
+        <p>No complaints pending verification.</p>
+      </div>
+    <% } else { %>
+      <div class="complaints-grid">
+        <% pending.forEach(function(item){ %>
+          <div class="complaint-card">
+            <div class="complaint-image">
+              <img src="<%= item.image %>" alt="<%= item.title %>" />
+            </div>
+            <div class="complaint-content">
+              <h4><a href="/listings/<%= item._id %>"><%= item.title %></a></h4>
+              <div class="complaint-meta">
+                <span class="meta-item"><i class="fas fa-map-marker-alt"></i> <%= item.city %></span>
+                <span class="meta-item"><i class="fas fa-home"></i> <%= item.address || 'N/A' %></span>
+              </div>
+              <div class="complaint-actions">
+                <form action="/listings/<%= item._id %>/status" method="POST" class="action-form">
+                  <input type="hidden" name="newStatus" value="Verified" />
+                  <button class="btn btn-success">Verify</button>
+                </form>
+                <form action="/listings/<%= item._id %>/status" method="POST" class="action-form">
+                  <input type="hidden" name="newStatus" value="Rejected" />
+                  <button class="btn btn-danger">Reject</button>
+                </form>
+              </div>
+              <div class="assignment-section">
+                <form action="/listings/<%= item._id %>/status" method="POST" class="assignment-form">
+                  <div class="form-row">
+                    <select name="assignedAuthority" class="form-select">
+                      <option value="">Select Authority</option>
+                      <% authorities.forEach(function(a){ %>
+                        <option value="<%= a.name %>"><%= a.city %> - <%= a.name %></option>
+                      <% }) %>
+                    </select>
+                    <input class="form-control" type="text" name="notes" placeholder="Notes (optional)" />
+                  </div>
+                  <input type="hidden" name="newStatus" value="Assigned to Authority" />
+                  <button class="btn btn-primary">Assign Authority</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+

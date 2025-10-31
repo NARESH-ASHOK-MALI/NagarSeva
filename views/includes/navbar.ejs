@@ -1,0 +1,37 @@
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+  <div class="container-fluid align-items-center">
+    <a class="navbar-brand d-flex align-items-center" href="/">
+        <img src="/Assets/logo.png" alt="logo" class="brand-logo d-inline-block">
+        <span class="ms-2" id="brand" style="color: white;">NagarSeva</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        
+        <li class="nav-item">
+          <a class="nav-link" href="/listings">All Complaints</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/listings/new">Register a complaint</a>
+        </li>
+      </ul>
+
+      <div class="navbar-nav ms-auto">
+        <% if (!currentUser) { %>
+          <a class="nav-link" href="/signup"><b>Sign Up</b></a>
+          <a class="nav-link" href="/login"><b>Log In</b></a>
+        <% } else { %>
+          <% if (currentUser.role === 'admin') { %>
+            <a class="nav-link" href="/admin/dashboard"><b>Admin Dashboard</b></a>
+          <% } else { %>
+            <a class="nav-link" href="/user/dashboard"><b>My Dashboard</b></a>
+          <% } %>
+          <a class="nav-link" href="/logout"><b>Log Out</b></a>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+</nav>
