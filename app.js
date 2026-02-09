@@ -51,9 +51,17 @@ const upload = multer({ storage });
 
 
 // =================================================================
-// 2. DATABASE CONNECTION & SERVER START
+// 2. APP INITIALIZATION
 // =================================================================
-const dbUrl = "mongodb://127.0.0.1:27017/DBMS";
+const app = express();
+
+// =================================================================
+// 3. DATABASE CONNECTION
+// =================================================================
+// Use local MongoDB for development, Atlas for production
+const dbUrl = process.env.VERCEL 
+    ? process.env.MONGO_URL 
+    : "mongodb://127.0.0.1:27017/DBMS";
 const secret = process.env.SECRET || 'a-super-secret-string';
 
 async function main() {
@@ -62,18 +70,19 @@ async function main() {
 
 main()
     .then(() => {
-        console.log("Connected to DB");
-        app.listen(8080, () => {
-            console.log("Server is listening on port 8080");
-        });
+        console.log(`Connected to DB: ${process.env.VERCEL ? 'MongoDB Atlas' : 'Local MongoDB'}`);
     })
-    .catch(err => console.log("DB CONNECTION ERROR:", err));
+    .catch(err => {
+        console.log("DB CONNECTION ERROR:", err);
+        if (!process.env.VERCEL) {
+            console.log("\n⚠️  Make sure MongoDB is running locally: mongod");
+        }
+    });
 
 
 // =================================================================
-// 3. APP CONFIGURATION & MIDDLEWARE
+// 4. APP CONFIGURATION & MIDDLEWARE
 // =================================================================
-const app = express();
 
 // Setup error handlers for unhandled exceptions/rejections
 unhandledRejectionHandler();
@@ -564,3 +573,19 @@ app.use(notFoundHandler);
 
 // Global error handler - must be last
 app.use(errorHandler);
+
+// =================================================================
+// 7. SERVER START (for local development only)
+// =================================================================
+// Only start server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+        console.log(`Server is listening on port ${PORT}`);
+    });
+}
+
+// =================================================================
+// 8. EXPORT FOR VERCEL
+// =================================================================
+module.exports = app;
