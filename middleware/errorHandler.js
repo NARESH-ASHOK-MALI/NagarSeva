@@ -21,21 +21,9 @@ class ErrorLogger {
             additionalInfo
         };
         
-        // Log to console in development
-        if (process.env.NODE_ENV === 'development') {
-            console.error('Error occurred:', logEntry);
-        }
-        
-        // Log to file in production
-        if (process.env.NODE_ENV === 'production') {
-            const logDir = path.join(__dirname, '../logs');
-            if (!fs.existsSync(logDir)) {
-                fs.mkdirSync(logDir, { recursive: true });
-            }
-            
-            const logFile = path.join(logDir, `error-${new Date().toISOString().split('T')[0]}.log`);
-            fs.appendFileSync(logFile, JSON.stringify(logEntry) + '\n');
-        }
+        // Always log to console in all environments
+        // Vercel and other serverless platforms capture console output
+        console.error('Error occurred:', JSON.stringify(logEntry, null, 2));
     }
 }
 

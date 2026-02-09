@@ -59,10 +59,15 @@ const app = express();
 // 3. DATABASE CONNECTION
 // =================================================================
 // Use local MongoDB for development, Atlas for production
-const dbUrl = process.env.VERCEL 
-    ? process.env.MONGO_URL 
+const dbUrl = process.env.VERCEL || process.env.NODE_ENV === 'production'
+    ? (process.env.MONGO_URL || "mongodb://127.0.0.1:27017/DBMS")
     : "mongodb://127.0.0.1:27017/DBMS";
 const secret = process.env.SECRET || 'a-super-secret-string';
+
+// Validate MongoDB URL in production
+if ((process.env.VERCEL || process.env.NODE_ENV === 'production') && !process.env.MONGO_URL) {
+    console.error('⚠️  MONGO_URL environment variable is not set! Please configure it in Vercel.');
+}
 
 async function main() {
     await mongoose.connect(dbUrl);
